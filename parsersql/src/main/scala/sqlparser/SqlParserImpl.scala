@@ -15,12 +15,11 @@ object SqlParserImpl extends SqlParser {
   }
 
   private def selectStmt(using P[Any]): P[SelectPlan] = P(
-    KW("SELECT") ~ fields ~ KW("FROM") ~ identifier ~ where.? ~ End
+    KW("SELECT") ~ fields ~ KW("FROM") ~ identifier ~ where.? ~ range.? ~ End
   ).map {
-    case (fields, table, whereClause) =>
-      SelectPlan(fields, table, whereClause)
+    case (fields, table, whereClause, rangeClause) =>
+      SelectPlan(fields, table, whereClause, rangeClause)
   }
-
   private def fields(using P[Any]): P[Seq[String]] = P(
     ("*".!).map((_: String) => Seq("*")) | fieldList
   )
@@ -43,6 +42,15 @@ object SqlParserImpl extends SqlParser {
       }
   }
 
+  private def range(using P[Any]): P[Range] = P(
+    KW("RANGE") ~ intValue ~ "," ~ intValue
+  ).map {
+    case (start, count) => Range(start, count)
+  }
+
+  private def intValue(using P[Any]): P[Int] = P(
+    CharsWhileIn("0-9").!.map(_.toInt)
+  )
   private def comparisonCondition(using P[Any]): P[Expression] = P(
     identifier ~ comparisonOperator ~ value
   ).map {
@@ -72,4 +80,11 @@ object SqlParserImpl extends SqlParser {
   )
 
   private def KW(str: String)(using P[Any]): P[Unit] = P(IgnoreCase(str))
+
+  private def limit(using P[Any]): P[Int] = P(
+    KW("LIMIT") ~ CharsWhileIn("0-9").!.map(_.toInt)
+  )
+
 }
+
+

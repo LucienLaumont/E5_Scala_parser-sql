@@ -96,4 +96,24 @@ class SqlParserSpec extends FunSuite {
       )
     )
   }
+
+  // Tests pour la clause RANGE
+
+  test("Parse SELECT with RANGE clause") {
+    val sql = "SELECT * FROM my_table RANGE 10, 50"
+    val result = SqlParserImpl.parse(sql)
+    assertEquals(result, Right(SelectPlan(Seq("*"), "my_table", None, Some(Range(10, 50)))))
+  }
+
+  test("Parse SELECT with WHERE and RANGE clauses") {
+    val sql = "SELECT * FROM my_table WHERE age > 21 RANGE 5, 20"
+    val result = SqlParserImpl.parse(sql)
+    assertEquals(result, Right(SelectPlan(Seq("*"), "my_table", Some(GreaterThan("age", "21")), Some(Range(5, 20)))))
+  }
+
+  test("Parse SELECT with RANGE clause and multiple fields") {
+    val sql = "SELECT id, name FROM my_table RANGE 0, 10"
+    val result = SqlParserImpl.parse(sql)
+    assertEquals(result, Right(SelectPlan(Seq("id", "name"), "my_table", None, Some(Range(0, 10)))))
+  }
 }

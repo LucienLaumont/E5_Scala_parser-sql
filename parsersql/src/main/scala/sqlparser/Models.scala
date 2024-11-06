@@ -11,8 +11,11 @@ sealed trait ExecutionPlan
 case class SelectPlan(
   fields: Seq[String],
   table: String,
-  where: Option[Expression] = None
+  where: Option[Expression] = None,
+  range: Option[Range] = None
 ) extends ExecutionPlan
+
+case class Range(start: Int, count: Int)
 
 sealed trait Expression
 
