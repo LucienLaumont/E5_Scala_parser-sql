@@ -16,4 +16,14 @@ case class SelectPlan(
 
 sealed trait Expression
 
+// Expressions de comparaison
 case class Equals(field: String, value: String) extends Expression
+case class NotEquals(field: String, value: String) extends Expression
+case class GreaterThan(field: String, value: String) extends Expression
+case class GreaterThanOrEqual(field: String, value: String) extends Expression
+case class LessThan(field: String, value: String) extends Expression
+case class LessThanOrEqual(field: String, value: String) extends Expression
+
+// Expressions logiques
+case class And(left: Expression, right: Expression) extends Expression
+case class Or(left: Expression, right: Expression) extends Expression

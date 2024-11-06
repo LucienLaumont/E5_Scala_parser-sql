@@ -15,10 +15,10 @@ object SqlParserImpl extends SqlParser {
   }
 
   private def selectStmt(using P[Any]): P[SelectPlan] = P(
-    KW("SELECT") ~ fields ~ KW("FROM") ~ identifier ~ End
+    KW("SELECT") ~ fields ~ KW("FROM") ~ identifier ~ where.? ~ End
   ).map {
-    case (fields, table) =>
-      SelectPlan(fields, table)
+    case (fields, table, whereClause) =>
+      SelectPlan(fields, table, whereClause)
   }
 
   private def fields(using P[Any]): P[Seq[String]] = P(
@@ -29,7 +29,45 @@ object SqlParserImpl extends SqlParser {
     identifier.rep(1, sep = ","./)
   )
 
+  private def where(using P[Any]): P[Expression] = P(
+    KW("WHERE") ~ condition
+  )
+
+  private def condition(using P[Any]): P[Expression] = P(
+    comparisonCondition ~ (logicalOperator ~ comparisonCondition).rep
+  ).map {
+    case (first, rest) =>
+      rest.foldLeft(first) {
+        case (left, ("AND", right)) => And(left, right)
+        case (left, ("OR", right))  => Or(left, right)
+      }
+  }
+
+  private def comparisonCondition(using P[Any]): P[Expression] = P(
+    identifier ~ comparisonOperator ~ value
+  ).map {
+    case (field, ">=", value) => GreaterThanOrEqual(field, value)
+    case (field, ">", value)  => GreaterThan(field, value)
+    case (field, "<=", value) => LessThanOrEqual(field, value)
+    case (field, "<", value)  => LessThan(field, value)
+    case (field, "=", value)  => Equals(field, value)
+    case (field, "!=", value) => NotEquals(field, value)
+  }
+
+  private def comparisonOperator(using P[Any]): P[String] = P(
+    ">=".! | "<=".! | ">".! | "<".! | "=".! | "!=".!
+  )
+
+  private def logicalOperator(using P[Any]): P[String] = P(
+    KW("AND").map(_ => "AND") | KW("OR").map(_ => "OR")
+  )
+
   private def identifier(using P[Any]): P[String] = P(
+    CharsWhileIn("a-zA-Z0-9_").!
+  )
+
+  private def value(using P[Any]): P[String] = P(
+    "'" ~ CharsWhileIn("a-zA-Z0-9_").! ~ "'" |
     CharsWhileIn("a-zA-Z0-9_").!
   )
 
