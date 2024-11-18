@@ -109,7 +109,7 @@ sbt test
 
 1. Clonez le dépôt :
    ```bash
-   git clone https://github.com/esiee-scala-projects/2024-esiee_6.git
+   git clone https://github.com/LucienLaumont/E5_Scala_parser-sql.git
    cd parserSQL
    ```
 
