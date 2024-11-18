@@ -12,12 +12,20 @@ case class SelectPlan(
   fields: Seq[String],
   table: String,
   where: Option[Expression] = None,
+  orderBy: Option[OrderBy] = None,
   range: Option[Range] = None
 ) extends ExecutionPlan
 
-case class Range(start: Int, count: Int)
-
 sealed trait Expression
+
+// Expression de tri
+case class OrderBy(column: String, direction: SortDirection = Ascending())
+sealed trait SortDirection
+case class Ascending() extends SortDirection
+case class Descending() extends SortDirection
+
+// Expression de range
+case class Range(start: Int, count: Int)
 
 // Expressions de comparaison
 case class Equals(field: String, value: String) extends Expression
@@ -30,3 +38,4 @@ case class LessThanOrEqual(field: String, value: String) extends Expression
 // Expressions logiques
 case class And(left: Expression, right: Expression) extends Expression
 case class Or(left: Expression, right: Expression) extends Expression
+case class Not(expr: Expression) extends Expression
